@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # FastAPI Application
+  web:
+    image: majorsigma/greenbasket:prod
+    container_name: greenbasket-prod
+    ports:
+      - 8080:8000
+    depends_on:
+      - database
+    environment:
+      - DATABASE_URL=postgresql://major:v227ca@database:5432/greenbasket-prod
+    networks:
+      - greenbasket-prod-net
+
+  # PostgreSQL Database
+  database:
+    image: postgres:15
+    container_name: greenbasket-prod-db
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=major
+      - POSTGRES_PASSWORD=v227ca
+      - POSTGRES_DB=greenbasket-prod
+    volumes:
+      - postgres-prod-data:/var/lib/postgresql/data
+    networks:
+      - greenbasket-prod-net
+
+networks:
+  greenbasket-prod-net:
+    driver: bridge
+
+volumes:
+  postgres-prod-data:
+    driver: local

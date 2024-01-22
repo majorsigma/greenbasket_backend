@@ -1,0 +1,20 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+fastapi = "*"
+uvicorn = "*"
+strawberry-graphql = "*"
+python-jose = "*"
+sqlalchemy = "*"
+python-dotenv = "*"
+passlib = "*"
+psycopg2-binary = "*"
+alembic = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.10"

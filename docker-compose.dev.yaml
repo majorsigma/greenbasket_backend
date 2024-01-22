@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # FastAPI Application
+  web:
+    image: majorsigma/greenbasket:dev
+    container_name: greenbasket-dev
+    ports:
+      - 8080:8000
+    depends_on:
+      - database
+    environment:
+      - DATABASE_URL=postgresql://major:v227ca@database:5432/greenbasket-dev
+    networks:
+      - greenbasket-dev-net
+    volumes:
+      - .:/app
+
+  # PostgreSQL Database
+  database:
+    image: postgres:15
+    container_name: greenbasket-dev-db
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=major
+      - POSTGRES_PASSWORD=v227ca
+      - POSTGRES_DB=greenbasket-dev
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data
+    networks:
+      - greenbasket-dev-net
+
+networks:
+  greenbasket-dev-net:
+    driver: bridge
+
+volumes:
+  postgres-dev-data:
+    driver: local
