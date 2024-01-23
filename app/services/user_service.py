@@ -1,15 +1,17 @@
 """User Service Module"""
+# pylint: disable=E0401
 
 import typing
 
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
-from app.models import User
 from app.exceptions.users import UserAlreadyExistsException, UserRegistrationException
+from app.models import User
 from app.utils import GBLogger
 
-password_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
+password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 logger = GBLogger("UserService")
+
 
 class UserService:
     """User service class"""
@@ -22,6 +24,20 @@ class UserService:
             session: The session object
         """
         self.session = session
+
+    @staticmethod
+    def get_password_hash(password: str):
+        """
+        Returns a hashed password.
+        """
+        return password_context.hash(password)
+
+    @staticmethod
+    def verify_password(password: str, hashed_password: str):
+        """
+        Verifies a password against a hashed password.
+        """
+        return password_context.verify(password, hashed_password)
 
     def get_all_users(self) -> typing.List:
         """
@@ -40,13 +56,16 @@ class UserService:
     def get_user_by_email(self, email: str) -> User | None:
         """Retrieves a user by his/her email"""
         try:
-            user = self.session.query(User).get(User.email == email)
+            logger.log_debug(f"Searching Email: {email}")
+            user = self.session.query(User).filter(email == email).first()
             return user
         except Exception as e:
             raise e
-        
+
     def register_user(self, body: str) -> User:
-        """Registers a new users into the system"""
+        """Registers a new users into the system. If the user already exists,
+        return the user else raise an exception.
+        """
         try:
             user = User(**body.dict())
             users = self.session.query(User).all()
@@ -61,6 +80,6 @@ class UserService:
         except UserAlreadyExistsException:
             raise
         except Exception as e:
-            raise e
+            # raise e
             # logger.log_error(f"Error creating a user: {e}")
             raise UserRegistrationException from e

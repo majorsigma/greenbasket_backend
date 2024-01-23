@@ -1,3 +1,4 @@
+#pylint: disable=E0401, E1101, C0116, C0103
 """Added new field to User
 
 Revision ID: 13a733f64574

@@ -13,6 +13,7 @@ python-dotenv = "*"
 passlib = "*"
 psycopg2-binary = "*"
 alembic = "*"
+pydantic = {extras = ["email"], version = "*"}
 
 [dev-packages]
 

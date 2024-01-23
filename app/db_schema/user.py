@@ -22,3 +22,9 @@ class UserInput(BaseModel):
     email: str
     date_of_birth: str
     address: str | None
+
+
+class LoginInput(BaseModel):
+    """Model for logging in a user"""
+    email: str
+    password: str

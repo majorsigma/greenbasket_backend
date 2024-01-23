@@ -1,4 +1,5 @@
 """User Model"""
+#pylint: disable=E0401
 
 from datetime import datetime
 from sqlalchemy import Boolean, String, MetaData

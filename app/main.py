@@ -1,8 +1,9 @@
 """The main entrypoint the greenbasket application"""
+#pylint: disable=E0401
+
 from fastapi import FastAPI
-# from app.dependencies import UnitOfWork
-from app.utils import GBLogger
 from app.routers import user_router
+from app.utils import GBLogger
 
 logger = GBLogger("main")
 app = FastAPI()
@@ -11,5 +12,4 @@ app.include_router(user_router.router)
 @app.get("/")
 def read_root():
     """Greet the wold"""
-    # uow = UnitOfWork()
     return {"message": "Welcome to GreenBasket"}
