@@ -3,11 +3,11 @@
 
 from datetime import datetime, timedelta
 
-# from typing import Annotated
-# from fastapi import Depends, status
-# from fastapi.exceptions import HTTPException
-from jose import jwt
+from typing import Annotated
+from fastapi import Depends, status
+from fastapi.exceptions import HTTPException
 from fastapi.security import OAuth2PasswordBearer
+from jose import jwt, JWTError
 from app.exceptions.users import UserNotFoundException
 from app.models import User
 from app.services.user_service import UserService
@@ -30,7 +30,6 @@ def get_unit_of_work():
     uow = UnitOfWork()
     return uow
 
-
 def get_user_by_email(email: str) -> User | None:
     """
     Retrieves a user from the database by their email.
@@ -50,6 +49,25 @@ def get_user_by_email(email: str) -> User | None:
     except Exception as e:
         raise UserNotFoundException from e
 
+
+def get_user_by_username(username: str) -> User | None:
+    """
+    Retrieves a user from the database by their username.
+
+    args:
+        username (str): The username of the user to retrieve.
+
+    returns:
+        User: The user object retrieved from database, or
+        None if the user is not found.
+    """
+    try:
+        with get_unit_of_work() as uow:
+            user_service = UserService(uow.session)
+            user = user_service.get_user_by_username(username)
+            return user
+    except Exception as e:
+        raise UserNotFoundException from e
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     """
@@ -73,3 +91,34 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
         to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+
+def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+    """
+    Get the current user based on the provided token
+    """
+    # Raise an exception if the credentials cannot be validated
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    try:
+        # Decode the token to extract the payload
+        payload = jwt.decode(token, SECRET_KEY, ALGORITHM)
+        # Get the username from the payload
+        username = payload.get("sub")
+        # Raise an exception if the username is not found
+        if username is None:
+            raise credentials_exception
+    except JWTError as e:
+        # Raise an exception if there is a JWT error
+        raise credentials_exception from e
+    # Get the user based on the username
+    user = get_user_by_email(username)
+    # Raise an exception if the user is not found
+    if user is None:
+        raise credentials_exception
+    # Return the user
+    return user

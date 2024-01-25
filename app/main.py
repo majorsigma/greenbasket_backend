@@ -1,5 +1,5 @@
 """The main entrypoint the greenbasket application"""
-#pylint: disable=E0401
+#pylint: disable=E0401, E0611
 
 from fastapi import FastAPI
 from app.routers import user_router

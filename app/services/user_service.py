@@ -56,18 +56,35 @@ class UserService:
     def get_user_by_email(self, email: str) -> User | None:
         """Retrieves a user by his/her email"""
         try:
-            logger.log_debug(f"Searching Email: {email}")
             user = self.session.query(User).filter(email == email).first()
             return user
         except Exception as e:
             raise e
 
-    def register_user(self, body: str) -> User:
+    def get_user_by_username(self, username: str) -> User | None:
+        """Retrieves a user by his/her username"""
+        try:
+            user = self.session.query(User).where(User.username == username).first()
+            return user
+        except Exception as e:
+            raise e
+
+    def change_user_verification_status(self, user_email: str) -> bool:
+        """change the verification status of the user"""
+        try:
+            user = self.get_user_by_email(user_email)
+            user.is_verified = True
+            self.session.commit()
+            return True
+        except Exception as e:
+            raise e
+
+    def register_user(self, body: dict) -> User:
         """Registers a new users into the system. If the user already exists,
         return the user else raise an exception.
         """
         try:
-            user = User(**body.dict())
+            user = User(**body)
             users = self.session.query(User).all()
             logger.log_debug(f"Users: {len(users)}")
             for u in users:

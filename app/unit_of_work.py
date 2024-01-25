@@ -1,4 +1,5 @@
 """Unit of Work Module"""
+#pylint: disable=E0401
 
 from dotenv import dotenv_values
 from sqlalchemy import create_engine
@@ -6,7 +7,8 @@ from sqlalchemy.orm import sessionmaker
 from app.utils import GBLogger
 
 logger = GBLogger("UnitOfWork")
-env_vars = dotenv_values('.env')
+env_vars = dotenv_values(".env")
+
 
 class UnitOfWork:
     """Basic unit of work to help with database interactions"""
@@ -14,14 +16,12 @@ class UnitOfWork:
     def __init__(self):
         """Unit of Work Constructor"""
         self.session = None
-        self.database_url = env_vars.get('DEV_DATABASE_URL')
-        self.session_maker = sessionmaker(
-            bind=create_engine(self.database_url)
-        )
-        logger.log_debug("Session maker: %s" % self.session_maker)
+        self.database_url = env_vars.get("DEV_DATABASE_URL")
+        self.session_maker = sessionmaker(bind=create_engine(self.database_url))
 
     def __enter__(self):
         """
+
         Enters the context of the object.
 
         Return:
@@ -33,7 +33,7 @@ class UnitOfWork:
     def __exit__(self, exc_type, exc_val, traceback):
         """
         Exits the context manager and performs any necessary cleanup.
-        
+
         :param exc_type: The type of exception being raised, if any.
         :param exc_val: The value of the exception being raised, if any.
         :param traceback: The traceback of the exception being raised, if any.

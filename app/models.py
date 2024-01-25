@@ -29,7 +29,10 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_online: Mapped[bool] = mapped_column(Boolean, default=False)
     is_2fa_enabled: Mapped[bool] = mapped_column(Boolean, nullable=True, default=False)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=True)
     address: Mapped[str] = mapped_column(String(1000), nullable=True)
+    lga: Mapped[str] = mapped_column(String(100), nullable=True)
+    state: Mapped[str] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         default=datetime.utcnow,
@@ -49,7 +52,10 @@ class User(Base):
             "is_active": self.is_active,
             "is_2fa_enabled": self.is_2fa_enabled,
             "is_online": self.is_online,
+            "is_verified": self.is_verified,
             "address": self.address,
+            "lga": self.lga,
+            "state": self.state,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
         }
