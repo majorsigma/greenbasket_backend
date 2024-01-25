@@ -1,9 +1,9 @@
 """Generic dependencies"""
-# pylint: disable=E0401
+# pylint: disable=E0401, E0611
 
 from datetime import datetime, timedelta
-
 from typing import Annotated
+from dotenv import dotenv_values
 from fastapi import Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.security import OAuth2PasswordBearer
@@ -14,8 +14,9 @@ from app.services.user_service import UserService
 from app.unit_of_work import UnitOfWork
 from app.utils import GBLogger
 
-SECRET_KEY = "6bd30698838f912a60fc3a57b51da2132d1f2ee046b82ae07d75b21\
-64b39ffaeeadd44c7442fa39b7a70799b506563dad8370417b29dcb457ff2f1d68a34fc60"
+
+env_values = dotenv_values(".env")
+SECRET_KEY = env_values.get("JWT_SECRET")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 

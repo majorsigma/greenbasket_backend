@@ -6,7 +6,7 @@ from datetime import timedelta
 from typing import Annotated
 from email.mime.text import MIMEText
 import pyotp
-from fastapi import APIRouter, Body, Query, status
+from fastapi import APIRouter, Depends, Body, Path, Query, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import HTTPException
 from app.db_schema.user import (
@@ -15,14 +15,21 @@ from app.db_schema.user import (
     LoginInput,
     LoginResponse,
     UserVerification,
+    UserLocation,
+    AccountProfile,
 )
 from app.dependencies import (
     UnitOfWork,
+    get_current_user,
     get_user_by_email,
     create_access_token,
     ACCESS_TOKEN_EXPIRE_MINUTES,
 )
-from app.exceptions.users import UserAlreadyExistsException, UserRegistrationException
+from app.exceptions.users import (
+    UserAlreadyExistsException,
+    UserRegistrationException,
+    UserNotFoundException,
+)
 
 from app import models
 from app.services.user_service import UserService
@@ -32,7 +39,7 @@ from dotenv import dotenv_values
 router = APIRouter(prefix="/auth", tags=["auth"])
 env_vars = dotenv_values(".env")
 SMTP_SERVER = str(env_vars.get("SMTP_SERVER"))
-SMTP_PORT = str(env_vars.get("SMTP_PORT"))
+SMTP_PORT = int(env_vars.get("SMTP_PORT"))
 SMTP_USER = str(env_vars.get("SMTP_USER"))
 SMTP_PASSWORD = str(env_vars.get("SMTP_PASSWORD"))
 TOTP_SECRET = str(env_vars.get("TOTP_SECRET"))
@@ -99,8 +106,8 @@ def register_user(user_data: Annotated[UserInput, Body()]) -> JSONResponse:
             user_service = UserService(uow.session)
             user_email = user_data.email
             verification_code = totp.now()
-            is_code_sent = send_verification_email(user_email, verification_code)
             db_user = user_service.register_user(user_data.dict())
+            is_code_sent = send_verification_email(user_email, verification_code)
             user = User(**db_user.dict())
             if not is_code_sent:
                 return JSONResponse(
@@ -162,6 +169,29 @@ def resend_verification_code(email: Annotated[str, Query()]):
     return JSONResponse({"status": "success", "message": "Verification code sent"})
 
 
+@router.patch("/user/set-location")
+def set_user_location(
+    user_email: Annotated[str, Query()],
+    location_data: Annotated[UserLocation, Body()],
+):
+    """Sets the user location"""
+    with UnitOfWork() as uow:
+        try:
+            user_service = UserService(uow.session)
+            user_service.set_user_location(user_email, location_data.dict())
+            return JSONResponse({"status": "success", "message": "User location set"})
+        except UserNotFoundException:
+            return JSONResponse(
+                {
+                    "status": "error",
+                    "message": f"User with the email `{user_email}` not found.",
+                },
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            raise e
+
+
 @router.post("/user/login", description="Logs user in")
 async def login(user_data: Annotated[LoginInput, Body()]):
     """
@@ -198,3 +228,88 @@ async def login(user_data: Annotated[LoginInput, Body()]):
         response.dict(),
         status_code=status.HTTP_200_OK,
     )
+
+
+@router.patch(
+    "/user/update-info",
+    dependencies=[Depends(get_current_user)],
+)
+def update_user_info(
+    user_email: Annotated[str, Query()],
+    user_data: Annotated[AccountProfile, Body()],
+):
+    """Updates the user information"""
+    with UnitOfWork() as uow:
+        try:
+            user_service = UserService(uow.session)
+            user_service.update_user_info(user_email, user_data.dict())
+            return JSONResponse(
+                {"status": "success", "message": "User information updated"}
+            )
+        except UserNotFoundException:
+            return JSONResponse(
+                {
+                    "status": "error",
+                    "message": f"User with the email `{user_email}` not found.",
+                },
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            raise e
+
+
+@router.patch(
+    "/user/toggle-availability/{user_id}",
+    dependencies=[Depends(get_current_user)],
+)
+def toggle_availability(
+    user_id: Annotated[str, Path()],
+    is_online: Annotated[bool, Query()],
+):
+    """Updates the user availability"""
+    with UnitOfWork() as uow:
+        try:
+            user_service = UserService(uow.session)
+            user_service.toggle_availability(user_id, is_online)
+            return JSONResponse(
+                {
+                    "status": "success",
+                    "message": "User availability updated",
+                },
+                status_code=status.HTTP_200_OK,
+            )
+        except UserNotFoundException:
+            return JSONResponse(
+                {
+                    "status": "error",
+                    "message": f"User with the id `{user_id}` not found.",
+                },
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            raise e
+
+
+@router.delete("/user/{user_id}")
+def delete_user(user_id: Annotated[str, Path()]):
+    """Deletes a user"""
+    with UnitOfWork() as uow:
+        try:
+            user_service = UserService(uow.session)
+            user_service.delete_user(user_id)
+            return JSONResponse(
+                {
+                    "status": "success",
+                    "message": "User deleted",
+                }
+            )
+        except UserNotFoundException:
+            return JSONResponse(
+                {
+                    "status": "error",
+                    "message": f"User with the id `{user_id}` not found.",
+                },
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            raise e

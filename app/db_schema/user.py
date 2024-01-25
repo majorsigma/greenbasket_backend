@@ -51,3 +51,21 @@ class UserVerification(BaseModel):
 
     user_email: str
     verification_code: str
+
+
+class UserLocation(BaseModel):
+    """Model for setting user location"""
+
+    address: str
+    state: str
+    lga: str
+
+
+class AccountProfile(BaseModel):
+    """Model for Account Profile"""
+
+    username: str
+    date_of_birth: str
+    address: str
+    state: str | None = None
+    lga: str | None = None
