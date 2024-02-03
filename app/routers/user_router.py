@@ -1,4 +1,5 @@
 """Module for routing user related endpoints"""
+
 # pylint: disable=E0401, E0611
 
 import smtplib
@@ -6,6 +7,7 @@ from datetime import timedelta
 from typing import Annotated
 from email.mime.text import MIMEText
 import pyotp
+from celery import Celery
 from fastapi import APIRouter, Depends, Body, Path, Query, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import HTTPException
