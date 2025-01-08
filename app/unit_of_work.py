@@ -21,7 +21,6 @@ class UnitOfWork:
 
     def __enter__(self):
         """
-
         Enters the context of the object.
 
         Return:

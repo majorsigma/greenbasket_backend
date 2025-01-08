@@ -17,7 +17,8 @@ app = Celery(
 
 # But if in a big project read configuration from another module
 # 'celeryconfig.py'
-app.config_from_object('celeryconfig')
+# app.config_from_object('celeryconfig')
+
 
 @app.task
 def add(x, y):
@@ -28,6 +29,9 @@ def add(x, y):
 def main():
     """Main function"""
     result = add.delay(5, 2)
-    print("Result ", result)
+    print("Result: ", result)
+    # result.get()
+    sig = add.s((2, 10), countdown=10)
+    print(f"Signature: {sig.get()}")
 
-    result.get()
+main()

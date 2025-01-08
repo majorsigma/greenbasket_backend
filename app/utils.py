@@ -44,6 +44,7 @@ class GBLogger:
 
     def __init__(self, location = None):
         self.location = location
+        
     @staticmethod
     def log(level, message):
         """Log message"""

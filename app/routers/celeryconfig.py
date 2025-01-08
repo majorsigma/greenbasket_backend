@@ -1,10 +1,11 @@
+"""Celery configuration"""
 
-task_serializer = 'json'
-result_serializer = 'json'
-accept_content = ['json']
-timezone = 'Africa/Lagos'
+# pylint: disable=C0103
+
+task_serializer = "json"
+result_serializer = "json"
+accept_content = ["json"]
+timezone = "Africa/Lagos"
 enable_utc = True
 
-task_routes = {
-    'task.add': 'low-priority'
-}
+task_routes = {"task.add": "low-priority"}

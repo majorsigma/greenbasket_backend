@@ -7,7 +7,7 @@ from app.utils import GBLogger
 
 logger = GBLogger("main")
 app = FastAPI()
-app.include_router(user_router.router)
+app.include_router(user_router.router, prefix='/api/v1')
 
 @app.get("/")
 def read_root():

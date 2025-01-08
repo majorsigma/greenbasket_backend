@@ -50,8 +50,14 @@ logger = GBLogger("UserRouter")
 
 totp = pyotp.TOTP(str(TOTP_SECRET), interval=60, issuer="GreenBasket")
 
+app = Celery(
+    "user_tasks",
+    backend="redis://localhost:6379",
+    broker="pyamqp://guest:guest@localhost:5672/",
+)
 
-def send_verification_email(email, verification_code) -> bool:
+@app.task
+def send_verification_email(email, verification_code):
     """Sends a verfication email to the user"""
     msg = MIMEText(
         f"Your verification code is: {verification_code}",
@@ -66,7 +72,7 @@ def send_verification_email(email, verification_code) -> bool:
     with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as smtp:
         resp = smtp.login(user=SMTP_USER, password=SMTP_PASSWORD)
         logger.log_debug(f"Response: {resp}")
-        smtp.sendmail("olalekan.o.ogundele@gmail.com", [email], msg.as_string())
+        smtp.sendmail("olalekan.o.ogundele@gmail.com", [email], msg.as_string(),)
         return True
 
 
@@ -94,9 +100,10 @@ def authenticate_user(username: str, password: str) -> models.User | None:
 def get_users() -> dict:
     """Get all users"""
     with UnitOfWork() as uow:
-        logger.log_debug(f"UOW's session {dir(uow.session)}")
+        # logger.log_debug(f"UOW's session {dir(uow.session)}")
         user_service = UserService(uow.session)
         users = user_service.get_all_users()
+        logger.d(f"Users list: {len(users)}")
         return {"users": users}
 
 
